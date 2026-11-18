@@ -1,13 +1,8 @@
 :root {
-  --background: #ffffff;
+  --background: #f7f9fc;
   --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --accent: #2563eb;
+  --accent-soft: #eef3fe;
 }
 
 html {
@@ -42,8 +37,6 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+html {
+  color-scheme: light;
 }

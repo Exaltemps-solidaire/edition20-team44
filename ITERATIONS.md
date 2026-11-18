@@ -76,7 +76,32 @@
     - `DEPLOIEMENT.md` : section « fragile » mise à jour (persistance), routes de l'api à jour.
     - `e2e/demo.spec.ts` : étape de création ajoutée (hors DoD).
 
-## Itération 3 : Les deux circuits (Entreprise / Collectivité)
+## Itération 3 : Thème clair, ombres douces, accent bleu
+
+- **⚠️ Demande directe du développeur**, insérée devant « les deux circuits » (repoussé en itération 4) : le design jugé trop austère pour donner envie. Changement de priorité non validé par les cadreurs — à signaler si l'équipe s'en étonne en test.
+- **Dans le périmètre** : forcer le thème clair (retirer le mode sombre suivant les préférences système), ajouter des ombres douces sur les cartes et boutons, utiliser le bleu comme accent discret (bordures, focus, bouton principal).
+- **Hors périmètre** : refonte de la mise en page, nouvelle typographie, nouveaux composants.
+- **Critères d'acceptation** :
+  - Étant donné la page ouverte (y compris avec une préférence système sombre), alors le thème reste clair sur tous les écrans.
+  - Étant donné les cartes et le formulaire, alors ils ont une ombre douce visible.
+  - Étant donné les éléments interactifs, alors ils utilisent le bleu en accent discret (pas dominant).
+- **Hypothèse de l'équipe couverte** : aucune (demande du développeur, hors hypothèses de la passation).
+- **Codage estimé** : 5 minutes.
+- **Fichiers prévus** : `frontend/src/app/globals.css`, `frontend/src/app/page.module.css`. Soit 2 fichiers.
+- **Tests unitaires prévus** : aucun (balisage/style pur, DoD l'autorise).
+- **Étapes ajoutées à la démo** : aucune (pas de nouveau comportement, juste du style).
+- **Temps restant au début** : moins de 15 minutes (redemandé, 2026-11-18).
+- **Bilan** :
+  - Codage réel : moins d'une minute (pur CSS, aucune alarme de budget).
+  - Les 3 critères sont satisfaits : `globals.css` et `page.module.css` ne contiennent plus de `@media (prefers-color-scheme: dark)` ; `box-shadow` et `#2563eb` confirmés dans le CSS servi par le conteneur déployé (`curl` sur les chunks `_next/static/chunks/*.css`).
+  - Rien n'est reporté.
+  - Seul le service `frontend` a été reconstruit, poussé et redéployé (l'`api` n'a pas changé) — plus rapide.
+  - Contrat de déployabilité : aucune borne, aucune alarme.
+  - **Modifications** :
+    - `frontend/src/app/globals.css` : thème clair forcé (suppression des deux blocs `prefers-color-scheme: dark`), variables `--accent`/`--accent-soft` — sert les 3 critères.
+    - `frontend/src/app/page.module.css` : `box-shadow` sur `.personaButton`, `.changerPersona`, `.fiche`, `.formulaire` ; bordure gauche et focus en bleu, bouton de soumission en bleu plein — sert les 3 critères.
+
+## Itération 4 : Les deux circuits (Entreprise / Collectivité)
 
 - **Dans le périmètre** : à la création d'une sollicitation, choisir le circuit « Entreprise » ou « Collectivité » ; la fiche affiche les champs propres à son circuit (ex. mention « sans facture » pour une collectivité, mention payante pour une entreprise).
 - **Hors périmètre** : suivi détaillé du devis (prochaine itération), sensibilisations dédiées, migration du stockage vers Postgres.
@@ -88,7 +113,7 @@
 - **Fichiers prévus** : `api/src/sollicitations.ts` (champ `circuit`), `api/src/routes.ts` (validation selon circuit), `frontend/src/app/page.tsx` (sélecteur de circuit + affichage), `api/src/routes.test.ts`. Soit 4 fichiers.
 - **Tests unitaires prévus** : 1 à 2, sur la validation spécifique au circuit.
 - **Étapes ajoutées à la démo** : choisir un circuit à la création, vérifier son affichage sur la fiche.
-- **⚠️ À confirmer au lancement** : redemander le temps restant ; avec ~21 minutes encore disponibles après l'itération 2 (sur les 45 annoncées en tout), le budget tient (8 codage + 5 publication + 10 tour de test ≈ 23 minutes) mais sans grande marge pour un nouvel imprévu.
+- **⚠️ À confirmer au lancement** : redemander le temps restant ; avec moins de 15 minutes annoncées avant l'itération 3, le budget (8 codage + 5 publication + 10 tour de test ≈ 23 minutes) risque fort de ne plus tenir. Envisager de la consacrer à stabiliser le pitch à la place.
 - **Bilan** : _à remplir en fin d'itération_
 
 ## À venir
