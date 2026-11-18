@@ -16,4 +16,13 @@ test("Démo : le cas passant", async ({ page }) => {
     await expect(page.getByRole("heading", { name: "Sollicitations" })).toBeVisible();
     await expect(page.getByText("Mairie de Paris")).toBeVisible();
   });
+
+  await test.step("Je crée une nouvelle sollicitation", async () => {
+    await page.getByRole("button", { name: "Nouvelle sollicitation" }).click();
+    await page.getByPlaceholder("Organisme").fill("Collège Pasteur");
+    await page.getByPlaceholder(/Module/).fill("Cluedo");
+    await page.locator('input[type="date"]').fill("2027-01-15");
+    await page.getByRole("button", { name: "Créer" }).click();
+    await expect(page.getByText("Collège Pasteur")).toBeVisible();
+  });
 });

@@ -56,10 +56,43 @@
 - **Fichiers prévus** : composant/page du formulaire, `api/src/routes.ts` (routes `GET`/`POST /api/v1/sollicitations`), un module de stockage (en mémoire, par simplicité à ce stade — décision à loguer dans `adr.md` si elle structure la suite), l'appel front en chemin relatif, `api/src/routes.test.ts`. Soit 5 fichiers.
 - **Tests unitaires prévus** : 1 à 3, sur la validation des champs obligatoires et sur l'ajout effectif de la fiche au stockage.
 - **Étapes ajoutées à la démo** : + cliquer « Nouvelle sollicitation » → remplir organisme/module/date → valider → vérifier que la fiche apparaît dans le tableau de bord.
-- **Bilan** : _à remplir en fin d'itération (durée de codage réelle, dépassement éventuel, fait, reporté, modifications fichier par fichier)_
+- **Temps restant au début de l'itération 2** : 26 minutes (redemandé, 2026-11-18). Pas de retour de l'équipe sur la version 1 à ce moment-là.
+- **Bilan** :
+  - Codage réel : 3 minutes, bien dans le budget (pas d'alarme à 8 minutes). Pas d'incident cette fois : images de base déjà en cache, `registry.internal`/`postgres.internal` déjà levés depuis l'itération 1 — build + push + redéploiement en ~1 minute. Temps total de l'itération (codage + déploiement + vérifications) : 5 minutes.
+  - Les 3 critères d'acceptation sont satisfaits, vérifiés en local par `curl` (GET liste, POST valide → 201 et apparition dans la liste, POST avec champ vide → 400).
+  - **Shortcut assumé** : stockage en mémoire, pas Postgres (voir `adr.md`, entrée du 2026-11-18, et `DEPLOIEMENT.md`) — les sollicitations créées ne survivent pas à un redémarrage du conteneur `api`. Non reporté comme critère manquant (aucun critère ne portait sur la persistance), mais à traiter avant la fin du build si le temps le permet.
+  - Rien d'autre n'est reporté sur le périmètre de cette itération.
+  - Contrat de déployabilité : aucune borne, aucune alarme (`./scripts/verifier-deployabilite.sh`).
+  - Démo (`e2e/demo.spec.ts`, hors DoD) : mise à jour avec l'étape de création. Jouée en local contre `localhost:8080` (chromium installé pour l'occasion) : **échoue dès l'étape précédente** (« Je vois le tableau de bord ») — attendu et documenté dans `docs/guidelines-deploiement.md` : sans le proxy d'entrée de la VM, le front sur 8080 ne relaie pas `/api/v1/...` vers l'api sur 8081, donc le `fetch` initial ne reçoit pas de JSON. Rien à corriger ici ; se rejouera correctement une fois `BASE_URL=$URL_PUBLIQUE`, depuis l'extérieur.
+  - **Modifications** :
+    - `api/src/sollicitations.ts` (nouveau) : stockage en mémoire, seed de 3 fiches, `creerSollicitation` avec validation des champs obligatoires — sert les 3 critères.
+    - `api/src/routes.ts` : routes `GET`/`POST /api/v1/sollicitations` — sert les 3 critères.
+    - `api/src/server.ts` : lecture du corps des requêtes `POST`/`PUT` (le routeur restait une fonction pure, testable sans serveur) — nécessaire au 1ᵉʳ et 3ᵉ critères.
+    - `api/src/routes.test.ts` : tests sur la création valide (liste mise à jour, statut 201) et sur le refus des champs vides — DoD point 2.
+    - `frontend/src/app/data.ts` : ne garde que les personas ; les sollicitations viennent désormais de l'API.
+    - `frontend/src/app/page.tsx` : formulaire « Nouvelle sollicitation », chargement de la liste via `fetch` (effet structuré pour éviter l'erreur eslint `react-hooks/set-state-in-effect` de cette version de React) — sert les 3 critères.
+    - `frontend/src/app/page.module.css` : styles du formulaire et des erreurs.
+    - `adr.md` : décision du stockage en mémoire.
+    - `DEPLOIEMENT.md` : section « fragile » mise à jour (persistance), routes de l'api à jour.
+    - `e2e/demo.spec.ts` : étape de création ajoutée (hors DoD).
+
+## Itération 3 : Les deux circuits (Entreprise / Collectivité)
+
+- **Dans le périmètre** : à la création d'une sollicitation, choisir le circuit « Entreprise » ou « Collectivité » ; la fiche affiche les champs propres à son circuit (ex. mention « sans facture » pour une collectivité, mention payante pour une entreprise).
+- **Hors périmètre** : suivi détaillé du devis (prochaine itération), sensibilisations dédiées, migration du stockage vers Postgres.
+- **Critères d'acceptation** :
+  - Étant donné le formulaire de création, quand on choisit un circuit, alors les champs affichés correspondent à ce circuit.
+  - Étant donné une fiche Collectivité et une fiche Entreprise dans le tableau de bord, alors leur circuit est visible sans ambiguïté sur chacune.
+- **Hypothèse de l'équipe couverte** : aucune (hypothèses non rédigées, voir ⚠️ en tête de fichier).
+- **Codage estimé** : 8 minutes.
+- **Fichiers prévus** : `api/src/sollicitations.ts` (champ `circuit`), `api/src/routes.ts` (validation selon circuit), `frontend/src/app/page.tsx` (sélecteur de circuit + affichage), `api/src/routes.test.ts`. Soit 4 fichiers.
+- **Tests unitaires prévus** : 1 à 2, sur la validation spécifique au circuit.
+- **Étapes ajoutées à la démo** : choisir un circuit à la création, vérifier son affichage sur la fiche.
+- **⚠️ À confirmer au lancement** : redemander le temps restant ; avec ~21 minutes encore disponibles après l'itération 2 (sur les 45 annoncées en tout), le budget tient (8 codage + 5 publication + 10 tour de test ≈ 23 minutes) mais sans grande marge pour un nouvel imprévu.
+- **Bilan** : _à remplir en fin d'itération_
 
 ## À venir
 
-1. Les deux circuits (Entreprise / Collectivité) : le choix à la création affiche les champs propres à chaque parcours (fiche organisme détaillée selon le circuit).
-2. Suivi de l'étape du devis (circuit entreprise) : payant ou non, étape du devis (à envoyer / envoyé / signé) visible sur la fiche, sans le produire.
-3. Sensibilisations dans le même outil : le module accepte cluedo / Fresque de la rue / stand et apparaît dans le tableau de bord comme une formation.
+1. Suivi de l'étape du devis (circuit entreprise) : payant ou non, étape du devis (à envoyer / envoyé / signé) visible sur la fiche, sans le produire.
+2. Sensibilisations dans le même outil : le module accepte cluedo / Fresque de la rue / stand et apparaît dans le tableau de bord comme une formation.
+3. Migrer le stockage des sollicitations de la mémoire vers Postgres (base `team44`, déjà créée sur la plateforme) — shortcut noté dans `adr.md`.

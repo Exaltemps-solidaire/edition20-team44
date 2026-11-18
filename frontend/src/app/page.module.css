@@ -57,3 +57,26 @@
   border-radius: 8px;
   border: 1px solid var(--button-secondary-border, #ebebeb);
 }
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 640px;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--button-secondary-border, #ebebeb);
+}
+
+.formulaire input,
+.formulaire button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--button-secondary-border, #ebebeb);
+  font-size: 15px;
+}
+
+.erreur {
+  color: #b00020;
+}

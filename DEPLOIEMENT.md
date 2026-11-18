@@ -5,15 +5,15 @@ Application de suivi des sollicitations de formation et de sensibilisation pour 
 ## Services
 
 - `frontend/` : Next.js en export statique, servi par nginx (port 80 du conteneur, port 8080 sur la VM). **Service exposé au public.**
-- `api/` : Node sans dépendance (port 8081 du conteneur, port 8081 sur la VM), routes `/health` et `/sante`. Pas encore appelée par le front (données en dur à ce stade).
+- `api/` : Node sans dépendance (port 8081 du conteneur, port 8081 sur la VM), routes `/health`, `/sante`, et `/api/v1/sollicitations` (GET, POST).
 
 ## Services externes
 
-Aucun à ce stade (pas de base de données, pas d'appel LLM, pas de stockage objet).
+Aucun appel externe. Une base `team44` existe sur la plateforme (Postgres) mais n'est pas encore câblée : voir ci-dessous.
 
 ## Ce qui est fragile ou inachevé
 
-- Les sollicitations affichées sont des données en dur (`frontend/src/app/data.ts`) : rien n'est encore persisté ni créé par un formulaire.
+- **Les sollicitations sont stockées en mémoire dans le processus `api`** (`api/src/sollicitations.ts`), pas dans Postgres : elles disparaissent à chaque redémarrage du conteneur `api` (voir `adr.md`, entrée du 2026-11-18). À migrer vers la base `team44` dès qu'une itération a le budget.
 - Pas de distinction entre les circuits Entreprise et Collectivité, pas de suivi du devis, pas de sensibilisations dédiées : prévu aux itérations suivantes (voir `ITERATIONS.md`).
 
 ## Contacts
