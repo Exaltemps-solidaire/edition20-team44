@@ -108,3 +108,15 @@
 .erreur {
   color: #b00020;
 }
+
+.circuits {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.circuitBadge {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--accent);
+}

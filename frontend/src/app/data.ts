@@ -1,10 +1,12 @@
 export type Persona = { id: string; nom: string; role: string };
+export type Circuit = "entreprise" | "collectivite";
 export type Sollicitation = {
   id: string;
   organisme: string;
   module: string;
   date: string;
   etape: string;
+  circuit: Circuit;
 };
 
 export const personas: Persona[] = [

@@ -19,10 +19,12 @@ test("Démo : le cas passant", async ({ page }) => {
 
   await test.step("Je crée une nouvelle sollicitation", async () => {
     await page.getByRole("button", { name: "Nouvelle sollicitation" }).click();
+    await page.getByLabel("Collectivité").check();
     await page.getByPlaceholder("Organisme").fill("Collège Pasteur");
     await page.getByPlaceholder(/Module/).fill("Cluedo");
     await page.locator('input[type="date"]').fill("2027-01-15");
     await page.getByRole("button", { name: "Créer" }).click();
     await expect(page.getByText("Collège Pasteur")).toBeVisible();
+    await expect(page.getByText("Collectivité — sans facture")).toBeVisible();
   });
 });

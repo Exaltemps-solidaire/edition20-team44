@@ -114,10 +114,38 @@
 - **Tests unitaires prévus** : 1 à 2, sur la validation spécifique au circuit.
 - **Étapes ajoutées à la démo** : choisir un circuit à la création, vérifier son affichage sur la fiche.
 - **⚠️ À confirmer au lancement** : redemander le temps restant ; avec moins de 15 minutes annoncées avant l'itération 3, le budget (8 codage + 5 publication + 10 tour de test ≈ 23 minutes) risque fort de ne plus tenir. Envisager de la consacrer à stabiliser le pitch à la place.
+- **Temps restant au début** : 30 minutes (redemandé, 2026-11-18 — plus que l'estimation précédente). Plan confirmé tel quel par le développeur.
+- **Bilan** :
+  - Codage réel : 1 minute (pas d'alarme). Déploiement rapide (~1 minute, images majoritairement en cache). Temps total de l'itération : environ 3 minutes.
+  - **Critère 2 satisfait** : chaque fiche affiche désormais son circuit (« Collectivité — sans facture » ou « Entreprise — payante »), vérifié par `curl` sur `GET /api/v1/sollicitations` et sur une création de chaque circuit.
+  - **Critère 1 partiellement satisfait, à signaler** : le formulaire propose bien le choix du circuit (deux boutons radio), mais les *champs* du formulaire restent identiques pour les deux circuits (organisme, module, date) — je n'ai pas différencié les champs eux-mêmes comme le prévoyait le critère au sens strict (ex. informations spécifiques à une collectivité). Simplification assumée pour tenir le budget d'1 minute de codage ; à reprendre si une itération ultérieure a le temps de distinguer réellement les champs par circuit.
+  - Contrat de déployabilité : aucune borne, aucune alarme.
+  - Démo (`e2e/demo.spec.ts`, hors DoD) : étape circuit ajoutée, non rejouée en local (même limitation que l'itération 2 : pas de proxy `/api/` sur `localhost:8080` depuis cette machine).
+  - **Modifications** :
+    - `api/src/sollicitations.ts` : champ `circuit` (`entreprise` | `collectivite`), requis et validé, seed des 3 fiches d'exemple mises à jour — sert les 2 critères.
+    - `api/src/routes.test.ts` : tests sur le circuit manquant/invalide et sur les deux valeurs acceptées — DoD point 2.
+    - `frontend/src/app/data.ts` : type `Circuit` et champ `circuit` sur `Sollicitation`.
+    - `frontend/src/app/page.tsx` : sélecteur de circuit (radio) dans le formulaire, badge de circuit sur chaque fiche — sert les 2 critères.
+    - `frontend/src/app/page.module.css` : styles du sélecteur et du badge.
+    - `e2e/demo.spec.ts` : étape de choix du circuit ajoutée (hors DoD).
+
+## Itération 5 : Suivi de l'étape du devis (circuit entreprise)
+
+- **Dans le périmètre** : quand le circuit « Entreprise » est choisi, le formulaire propose l'étape du devis (à envoyer / envoyé / signé) ; une fiche Collectivité n'affiche aucun champ devis (pas de facture).
+- **Hors périmètre** : rédaction du devis ou de la facture (l'outil note seulement l'étape, hors périmètre de toute l'application), sensibilisations dédiées, migration Postgres.
+- **Critères d'acceptation** :
+  - Étant donné le circuit Entreprise choisi à la création, alors un sélecteur d'étape de devis (à envoyer / envoyé / signé) apparaît dans le formulaire.
+  - Étant donné le circuit Collectivité choisi, alors aucun champ devis n'apparaît.
+  - Étant donné une fiche Entreprise dans le tableau de bord, alors son étape de devis est visible.
+- **Hypothèse de l'équipe couverte** : aucune (hypothèses non rédigées, voir ⚠️ en tête de fichier).
+- **Codage estimé** : 7 minutes.
+- **Fichiers prévus** : `api/src/sollicitations.ts` (champ `devis`, validation conditionnelle au circuit), `api/src/routes.test.ts`, `frontend/src/app/page.tsx` (champ conditionnel + affichage), `frontend/src/app/data.ts` (type). Soit 4 fichiers.
+- **Tests unitaires prévus** : 1 à 2, sur la validation conditionnelle (devis obligatoire si entreprise, absent/ignoré si collectivité).
+- **Étapes ajoutées à la démo** : choisir l'étape de devis pour une fiche Entreprise, vérifier son affichage.
+- **⚠️ À confirmer au lancement** : redemander le temps restant et valider que ce découpage (pas de distinction de champs par circuit à l'itération 4, rattrapée ici pour le devis seulement) convient toujours aux cadreurs.
 - **Bilan** : _à remplir en fin d'itération_
 
 ## À venir
 
-1. Suivi de l'étape du devis (circuit entreprise) : payant ou non, étape du devis (à envoyer / envoyé / signé) visible sur la fiche, sans le produire.
-2. Sensibilisations dans le même outil : le module accepte cluedo / Fresque de la rue / stand et apparaît dans le tableau de bord comme une formation.
-3. Migrer le stockage des sollicitations de la mémoire vers Postgres (base `team44`, déjà créée sur la plateforme) — shortcut noté dans `adr.md`.
+1. Sensibilisations dans le même outil : le module accepte cluedo / Fresque de la rue / stand et apparaît dans le tableau de bord comme une formation.
+2. Migrer le stockage des sollicitations de la mémoire vers Postgres (base `team44`, déjà créée sur la plateforme) — shortcut noté dans `adr.md`.

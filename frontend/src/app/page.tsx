@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import styles from "./page.module.css";
-import { personas, type Persona, type Sollicitation } from "./data";
+import { personas, type Circuit, type Persona, type Sollicitation } from "./data";
 
 async function obtenirSollicitations(): Promise<Sollicitation[]> {
   const reponse = await fetch("/api/v1/sollicitations");
@@ -16,6 +16,7 @@ export default function Home() {
   const [organisme, setOrganisme] = useState("");
   const [typeModule, setTypeModule] = useState("");
   const [date, setDate] = useState("");
+  const [circuit, setCircuit] = useState<Circuit>("entreprise");
   const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function Home() {
     const reponse = await fetch("/api/v1/sollicitations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ organisme, module: typeModule, date }),
+      body: JSON.stringify({ organisme, module: typeModule, date, circuit }),
     });
     const corps = await reponse.json();
     if (!reponse.ok) {
@@ -44,6 +45,7 @@ export default function Home() {
     setOrganisme("");
     setTypeModule("");
     setDate("");
+    setCircuit("entreprise");
     setFormulaireOuvert(false);
     setSollicitations(await obtenirSollicitations());
   }
@@ -81,6 +83,26 @@ export default function Home() {
       </button>
       {formulaireOuvert && (
         <form className={styles.formulaire} onSubmit={creerSollicitation}>
+          <div className={styles.circuits}>
+            <label>
+              <input
+                type="radio"
+                name="circuit"
+                checked={circuit === "entreprise"}
+                onChange={() => setCircuit("entreprise")}
+              />
+              Entreprise
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="circuit"
+                checked={circuit === "collectivite"}
+                onChange={() => setCircuit("collectivite")}
+              />
+              Collectivité
+            </label>
+          </div>
           <input
             placeholder="Organisme"
             value={organisme}
@@ -100,6 +122,9 @@ export default function Home() {
         {sollicitations.map((s) => (
           <li key={s.id} className={styles.fiche}>
             <strong>{s.organisme}</strong> — {s.module} ({s.date}) — <em>{s.etape}</em>
+            <div className={styles.circuitBadge}>
+              {s.circuit === "collectivite" ? "Collectivité — sans facture" : "Entreprise — payante"}
+            </div>
           </li>
         ))}
       </ul>

@@ -19,6 +19,7 @@ describe("router", () => {
       organisme: "Collège Pasteur",
       module: "Cluedo",
       date: "2027-01-15",
+      circuit: "entreprise",
     });
     expect(reponse.statut).toBe(201);
     expect(listerSollicitations().length).toBe(avant + 1);
@@ -27,7 +28,13 @@ describe("router", () => {
 
 describe("creerSollicitation", () => {
   it("refuse un champ obligatoire manquant ou vide", () => {
-    expect(creerSollicitation({ organisme: "", module: "Formation", date: "2027-01-01" }).ok).toBe(false);
-    expect(creerSollicitation({ organisme: "X", module: "Formation" }).ok).toBe(false);
+    expect(creerSollicitation({ organisme: "", module: "Formation", date: "2027-01-01", circuit: "entreprise" }).ok).toBe(false);
+    expect(creerSollicitation({ organisme: "X", module: "Formation", circuit: "entreprise" }).ok).toBe(false);
+  });
+
+  it("refuse un circuit manquant ou inconnu, accepte entreprise et collectivite", () => {
+    expect(creerSollicitation({ organisme: "X", module: "Formation", date: "2027-01-01" }).ok).toBe(false);
+    expect(creerSollicitation({ organisme: "X", module: "Formation", date: "2027-01-01", circuit: "autre" }).ok).toBe(false);
+    expect(creerSollicitation({ organisme: "X", module: "Formation", date: "2027-01-01", circuit: "collectivite" }).ok).toBe(true);
   });
 });
