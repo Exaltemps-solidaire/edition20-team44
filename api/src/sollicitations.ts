@@ -1,31 +1,47 @@
 export type Circuit = "entreprise" | "collectivite";
 export type EtapeDevis = "a_envoyer" | "envoye" | "signe";
+export type TypeModule = "Formation" | "Sensibilisation";
 
 export type Sollicitation = {
   id: string;
   organisme: string;
-  module: string;
+  module: TypeModule;
   date: string;
+  heure?: string;
   etape: string;
   circuit: Circuit;
   devis?: EtapeDevis;
+  contact?: string;
+  adresse?: string;
+  raisonSociale?: string;
+  infoCollectivite?: string;
 };
 
 export type NouvelleSollicitation = {
   organisme?: unknown;
   module?: unknown;
   date?: unknown;
+  heure?: unknown;
   circuit?: unknown;
   devis?: unknown;
+  contact?: unknown;
+  adresse?: unknown;
+  raisonSociale?: unknown;
+  infoCollectivite?: unknown;
 };
 
 const CIRCUITS: Circuit[] = ["entreprise", "collectivite"];
 const ETAPES_DEVIS: EtapeDevis[] = ["a_envoyer", "envoye", "signe"];
+const MODULES: TypeModule[] = ["Formation", "Sensibilisation"];
+
+function texte(valeur: unknown): string | undefined {
+  return typeof valeur === "string" && valeur.trim() ? valeur.trim() : undefined;
+}
 
 let compteur = 0;
 const sollicitations: Sollicitation[] = [
   { id: "s1", organisme: "Mairie de Paris", module: "Formation", date: "2026-12-01", etape: "Session planifiée", circuit: "collectivite" },
-  { id: "s2", organisme: "Entreprise Lumio", module: "Sensibilisation — Fresque de la rue", date: "2026-12-05", etape: "Devis envoyé", circuit: "entreprise", devis: "envoye" },
+  { id: "s2", organisme: "Entreprise Lumio", module: "Sensibilisation", date: "2026-12-05", etape: "Devis envoyé", circuit: "entreprise", devis: "envoye" },
   { id: "s3", organisme: "Lycée Voltaire", module: "Formation", date: "2026-12-10", etape: "Demande reçue", circuit: "entreprise", devis: "a_envoyer" },
 ];
 
@@ -35,10 +51,15 @@ export function listerSollicitations(): Sollicitation[] {
 
 type ChampsValides = {
   organisme: string;
-  module: string;
+  module: TypeModule;
   date: string;
+  heure?: string;
   circuit: Circuit;
   devis?: EtapeDevis;
+  contact?: string;
+  adresse?: string;
+  raisonSociale?: string;
+  infoCollectivite?: string;
 };
 
 function validerChamps(entree: NouvelleSollicitation): { ok: true; valeurs: ChampsValides } | { ok: false; erreur: string } {
@@ -47,6 +68,9 @@ function validerChamps(entree: NouvelleSollicitation): { ok: true; valeurs: Cham
   );
   if (champsVides.length > 0) {
     return { ok: false, erreur: `champ(s) obligatoire(s) manquant(s) : ${champsVides.join(", ")}` };
+  }
+  if (!MODULES.includes(entree.module as TypeModule)) {
+    return { ok: false, erreur: `module invalide : attendu ${MODULES.join(" ou ")}` };
   }
   if (typeof entree.circuit !== "string" || !CIRCUITS.includes(entree.circuit as Circuit)) {
     return { ok: false, erreur: `circuit invalide : attendu ${CIRCUITS.join(" ou ")}` };
@@ -59,10 +83,15 @@ function validerChamps(entree: NouvelleSollicitation): { ok: true; valeurs: Cham
     ok: true,
     valeurs: {
       organisme: (entree.organisme as string).trim(),
-      module: (entree.module as string).trim(),
+      module: entree.module as TypeModule,
       date: (entree.date as string).trim(),
+      heure: texte(entree.heure),
       circuit,
       ...(circuit === "entreprise" ? { devis: entree.devis as EtapeDevis } : {}),
+      contact: texte(entree.contact),
+      adresse: texte(entree.adresse),
+      raisonSociale: texte(entree.raisonSociale),
+      ...(circuit === "collectivite" ? { infoCollectivite: texte(entree.infoCollectivite) } : {}),
     },
   };
 }
@@ -96,6 +125,7 @@ export function modifierSollicitation(
     ...sollicitations[index],
     ...resultat.valeurs,
     devis: resultat.valeurs.circuit === "entreprise" ? resultat.valeurs.devis : undefined,
+    infoCollectivite: resultat.valeurs.circuit === "collectivite" ? resultat.valeurs.infoCollectivite : undefined,
   };
   sollicitations[index] = sollicitation;
   return { ok: true, sollicitation };

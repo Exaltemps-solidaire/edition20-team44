@@ -214,20 +214,39 @@
     - `frontend/src/app/page.module.css` : style des boutons d'action sur chaque fiche.
     - `api/src/server.ts` : non touché, la lecture de corps existante couvrait déjà `PUT` ; `DELETE` n'a pas de corps.
 
-## Itération 8 : Cadrer le choix du module (formation ou sensibilisation)
+## Itération 8 : Page de détail complète d'une sollicitation
 
-- **Constat** : le champ « module » est déjà un texte libre depuis l'itération 2 — une sensibilisation (« Cluedo », « Fresque de la rue ») s'affiche déjà dans le tableau de bord comme une formation, le critère du PRD est donc déjà rempli dans les faits. Ce qui manque : un choix guidé plutôt qu'un texte libre, pour éviter les doublons de saisie (« Cluedo » vs « cluedo » vs « Jeu du cluedo »).
-- **Dans le périmètre** : remplacer le champ libre « Module » par un menu déroulant avec les valeurs connues (Formation, Cluedo, Fresque de la rue, Stand).
-- **Hors périmètre** : ajouter un nouveau type de sensibilisation non listé par la passation, distinguer sensibilisation/formation dans le stockage ou le filtre.
+- **⚠️ Demande directe du développeur**, remplace et absorbe l'itération 8 précédente (« cadrer le module ») : même besoin, traité ici avec 2 valeurs (Formation / Sensibilisation) au lieu de 4, sur demande explicite.
+- **❗️ Point signalé et tranché avec le développeur** : la passation exclut explicitement « la signature électronique et les pièces jointes dans l'outil » (`cadrage/7-prd.md`, Hors périmètre). Décision prise : champs affichés en lecture seule avec un texte de substitution (« non disponible dans cette version »), aucune fonctionnalité réelle (pas d'upload, pas de service de signature tiers).
+- **⚠️ Moins de 10 minutes annoncées** pour une itération plus grosse que les précédentes : périmètre réduit au strict nécessaire ci-dessous, pas de nouvelle dépendance, pas de persistance Postgres (reste en mémoire).
+- **Dans le périmètre** :
+  - Cliquer sur une fiche ouvre une vue de détail (même page, pas de nouvelle route — cohérent avec l'architecture déjà en place pour l'écran persona/tableau de bord) avec tous les champs déjà affichés, plus : contact, adresse, raison sociale, informations collectivité (ce dernier champ seulement si circuit collectivité) ; une heure en plus de la date ; des mentions « non disponible » pour devis-document/pièce jointe/signature électronique au sens strict du document, en plus de l'étape de devis déjà suivie.
+  - Le module devient un menu déroulant à deux valeurs : Formation, Sensibilisation (remplace le texte libre).
+  - Modifier/Supprimer restent accessibles depuis cette vue.
+- **Hors périmètre** : upload réel de pièce jointe, signature électronique fonctionnelle, dictionnaire de données détaillé des « informations collectivité » (champ texte libre faute de temps pour lire `dictionnaire-donnees-cible-mvp.xlsx`), persistance Postgres.
 - **Critères d'acceptation** :
-  - Étant donné le formulaire de création, alors le champ module est un menu déroulant avec les 4 valeurs ci-dessus (pas de texte libre).
-- **Hypothèse de l'équipe couverte** : aucune (hypothèses non rédigées, voir ⚠️ en tête de fichier).
-- **Codage estimé** : 3 minutes.
-- **Fichiers prévus** : `frontend/src/app/page.tsx` (remplacement de l'`<input>` par un `<select>`). Soit 1 fichier.
-- **Tests unitaires prévus** : aucun (balisage pur, pas de nouvelle logique).
-- **Étapes ajoutées à la démo** : aucune (le module est déjà couvert par les étapes existantes).
-- **Bilan** : _à remplir en fin d'itération_
+  - Étant donné le tableau de bord, quand on clique sur une fiche, alors une vue de détail s'ouvre avec l'organisme (nom, contact, adresse, raison sociale), la date et l'heure, le module, le circuit, le devis si entreprise, et les mentions non disponibles pour pièce jointe/signature.
+  - Étant donné le circuit collectivité, alors un champ « informations collectivité » est visible sur la fiche (absent pour entreprise).
+  - Étant donné le formulaire de création ou d'édition, alors le module est un menu déroulant (Formation / Sensibilisation), pas un texte libre.
+- **Hypothèse de l'équipe couverte** : aucune (demande du développeur).
+- **Codage estimé** : 6 minutes (budget réduit vu le temps annoncé).
+- **Fichiers prévus** : `api/src/sollicitations.ts`, `api/src/routes.test.ts`, `frontend/src/app/data.ts`, `frontend/src/app/page.tsx`, `frontend/src/app/page.module.css`. Soit 4 fichiers hors tests.
+- **Tests unitaires prévus** : 1, sur la validation du module (valeur attendue parmi les 2).
+- **Étapes ajoutées à la démo** : aucune (budget trop serré, hors DoD).
+- **Bilan** :
+  - Codage réel : 2 minutes (pas d'alarme). Déploiement des deux services (~1 minute). Temps total de l'itération : 3 minutes — la marge serrée annoncée (<10 min) ne s'est pas matérialisée, comme pour l'itération 7.
+  - Les 3 critères sont satisfaits, vérifiés par `curl` et par inspection du bundle JS servi (chaînes « Informations collectivité », « non disponible dans cette version », « Retour » confirmées) : module refusé hors Formation/Sensibilisation (400), fiche complète créée et relue avec contact/adresse/raison sociale/informations collectivité/heure.
+  - Rien n'est reporté au sens strict des critères ; reportés par choix explicite (voir Hors périmètre) : upload réel, signature électronique, dictionnaire de données structuré pour les infos collectivité.
+  - Contrat de déployabilité : aucune borne, aucune alarme.
+  - Démo (hors DoD) : non mise à jour, comme annoncé.
+  - **Modifications** :
+    - `api/src/sollicitations.ts` : type `TypeModule` (2 valeurs) et sa validation, champs optionnels `heure`, `contact`, `adresse`, `raisonSociale`, `infoCollectivite` (ce dernier réservé au circuit collectivité) — sert les 3 critères.
+    - `api/src/routes.test.ts` : tests sur la validation du module, ajustement des modules de test existants (« Cluedo » → « Sensibilisation »).
+    - `frontend/src/app/data.ts` : types et constante `MODULES`, champs ajoutés sur `Sollicitation`.
+    - `frontend/src/app/page.tsx` : vue de détail (clic sur une fiche), formulaire étendu avec les nouveaux champs, module en menu déroulant, mentions pièce jointe/signature — sert les 3 critères.
+    - `frontend/src/app/page.module.css` : styles de la vue détail et du lien cliquable sur la fiche.
 
 ## À venir
 
 1. Migrer le stockage des sollicitations de la mémoire vers Postgres (base `team44`, déjà créée sur la plateforme) — shortcut noté dans `adr.md`. Plus gros que les itérations précédentes (nouvelle dépendance, connexion, migration du schéma) : à tailler avec les cadreurs si le temps le permet encore.
+2. Champs « informations collectivité » structurés selon `documents-association/dictionnaire-donnees-cible-mvp.xlsx` (laissé en texte libre à l'itération 8 faute de temps pour le lire).

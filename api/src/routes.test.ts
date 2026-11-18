@@ -17,7 +17,7 @@ describe("router", () => {
     const avant = listerSollicitations().length;
     const reponse = router("POST", "/api/v1/sollicitations", {
       organisme: "Collège Pasteur",
-      module: "Cluedo",
+      module: "Sensibilisation",
       date: "2027-01-15",
       circuit: "entreprise",
       devis: "a_envoyer",
@@ -62,10 +62,21 @@ describe("modifierSollicitation", () => {
   });
 
   it("refuse une fiche introuvable ou des champs invalides", () => {
-    expect(modifierSollicitation("inconnu", { organisme: "X", module: "Y", date: "2027-01-01", circuit: "collectivite" }).ok).toBe(false);
-    const cree = creerSollicitation({ organisme: "X", module: "Y", date: "2027-01-01", circuit: "collectivite" });
+    expect(modifierSollicitation("inconnu", { organisme: "X", module: "Formation", date: "2027-01-01", circuit: "collectivite" }).ok).toBe(false);
+    const cree = creerSollicitation({ organisme: "X", module: "Formation", date: "2027-01-01", circuit: "collectivite" });
     const id = cree.ok ? cree.sollicitation.id : "";
-    expect(modifierSollicitation(id, { organisme: "", module: "Y", date: "2027-01-01", circuit: "collectivite" }).ok).toBe(false);
+    expect(modifierSollicitation(id, { organisme: "", module: "Formation", date: "2027-01-01", circuit: "collectivite" }).ok).toBe(false);
+  });
+});
+
+describe("validation du module", () => {
+  it("refuse un module hors Formation/Sensibilisation", () => {
+    expect(creerSollicitation({ organisme: "X", module: "Cluedo", date: "2027-01-01", circuit: "collectivite" }).ok).toBe(false);
+  });
+
+  it("accepte Formation et Sensibilisation", () => {
+    expect(creerSollicitation({ organisme: "X", module: "Formation", date: "2027-01-01", circuit: "collectivite" }).ok).toBe(true);
+    expect(creerSollicitation({ organisme: "X", module: "Sensibilisation", date: "2027-01-01", circuit: "collectivite" }).ok).toBe(true);
   });
 });
 
