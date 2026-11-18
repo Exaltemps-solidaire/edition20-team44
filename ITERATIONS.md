@@ -129,7 +129,34 @@
     - `frontend/src/app/page.module.css` : styles du sélecteur et du badge.
     - `e2e/demo.spec.ts` : étape de choix du circuit ajoutée (hors DoD).
 
-## Itération 5 : Suivi de l'étape du devis (circuit entreprise)
+## Itération 5 : Filtrer le tableau de bord par circuit (Tout / Collectivités / Entreprises)
+
+- **⚠️ Demande directe du développeur**, insérée devant « le suivi du devis » (repoussé en itération 6). Changement de priorité non validé par les cadreurs.
+- **Dans le périmètre** : trois boutons au-dessus du tableau de bord (Tout, Collectivités, Entreprises) qui filtrent la liste affichée, côté front, sur les données déjà chargées.
+- **Hors périmètre** : filtre persistant (mémorisé après rechargement), filtre côté API, combinaison avec d'autres critères (étape, date).
+- **Critères d'acceptation** :
+  - Étant donné le tableau de bord chargé, quand on clique « Collectivités », alors seules les fiches de circuit collectivité restent affichées.
+  - Étant donné le filtre « Entreprises » actif, quand on clique « Tout », alors toutes les fiches réapparaissent.
+- **Hypothèse de l'équipe couverte** : aucune (demande du développeur).
+- **Codage estimé** : 4 minutes.
+- **Fichiers prévus** : `frontend/src/app/page.tsx` (état du filtre, boutons, fonction de filtrage pure testable), `frontend/src/app/page.module.css` (style des boutons actifs), `frontend/src/app/filtrer-sollicitations.test.ts` (nouveau, test de la fonction pure). Soit 3 fichiers.
+- **Tests unitaires prévus** : 1, sur la fonction de filtrage pure (logique métier minimale, pas du balisage).
+- **Étapes ajoutées à la démo** : aucune (pas indispensable au cas passant, hors DoD).
+- **Temps restant au début** : ~25 minutes (redemandé, 2026-11-18).
+- **Bilan** :
+  - Codage réel : moins d'une minute. Déploiement du front seul (~1 minute).
+  - Les 2 critères sont satisfaits : fonction pure `filtrerSollicitations` testée (3 cas), boutons « Tout / Collectivités / Entreprises » confirmés dans le bundle JS servi.
+  - Un fichier de plus que prévu (`frontend/src/app/filtrer-sollicitations.ts`, la fonction elle-même, séparée de son test) — toujours sous la limite d'environ 5 fichiers.
+  - Rien n'est reporté.
+  - Contrat de déployabilité : aucune borne, aucune alarme.
+  - Démo (hors DoD) : non mise à jour, le filtre n'est pas sur le chemin du cas passant.
+  - **Modifications** :
+    - `frontend/src/app/filtrer-sollicitations.ts` (nouveau) : fonction pure de filtrage par circuit — sert les 2 critères.
+    - `frontend/src/app/filtrer-sollicitations.test.ts` (nouveau) : 2 tests (tout, par circuit) — DoD point 2.
+    - `frontend/src/app/page.tsx` : état du filtre, 3 boutons, application du filtre à l'affichage — sert les 2 critères.
+    - `frontend/src/app/page.module.css` : style des boutons de filtre (actif en bleu).
+
+## Itération 6 : Suivi de l'étape du devis (circuit entreprise)
 
 - **Dans le périmètre** : quand le circuit « Entreprise » est choisi, le formulaire propose l'étape du devis (à envoyer / envoyé / signé) ; une fiche Collectivité n'affiche aucun champ devis (pas de facture).
 - **Hors périmètre** : rédaction du devis ou de la facture (l'outil note seulement l'étape, hors périmètre de toute l'application), sensibilisations dédiées, migration Postgres.

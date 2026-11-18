@@ -120,3 +120,26 @@
   font-size: 13px;
   color: var(--accent);
 }
+
+.filtres {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 640px;
+}
+
+.filtre,
+.filtreActif {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #e4e9f2;
+  background: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.filtreActif {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}

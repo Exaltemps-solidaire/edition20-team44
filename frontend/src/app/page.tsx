@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import styles from "./page.module.css";
 import { personas, type Circuit, type Persona, type Sollicitation } from "./data";
+import { filtrerSollicitations, type Filtre } from "./filtrer-sollicitations";
 
 async function obtenirSollicitations(): Promise<Sollicitation[]> {
   const reponse = await fetch("/api/v1/sollicitations");
@@ -18,6 +19,7 @@ export default function Home() {
   const [date, setDate] = useState("");
   const [circuit, setCircuit] = useState<Circuit>("entreprise");
   const [erreur, setErreur] = useState<string | null>(null);
+  const [filtre, setFiltre] = useState<Filtre>("tout");
 
   useEffect(() => {
     let ignore = false;
@@ -118,8 +120,19 @@ export default function Home() {
           <button type="submit">Créer</button>
         </form>
       )}
+      <div className={styles.filtres}>
+        {(["tout", "collectivite", "entreprise"] as const).map((f) => (
+          <button
+            key={f}
+            className={filtre === f ? styles.filtreActif : styles.filtre}
+            onClick={() => setFiltre(f)}
+          >
+            {f === "tout" ? "Tout" : f === "collectivite" ? "Collectivités" : "Entreprises"}
+          </button>
+        ))}
+      </div>
       <ul className={styles.liste}>
-        {sollicitations.map((s) => (
+        {filtrerSollicitations(sollicitations, filtre).map((s) => (
           <li key={s.id} className={styles.fiche}>
             <strong>{s.organisme}</strong> — {s.module} ({s.date}) — <em>{s.etape}</em>
             <div className={styles.circuitBadge}>
