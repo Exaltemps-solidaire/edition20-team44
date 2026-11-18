@@ -27,4 +27,16 @@ test("Démo : le cas passant", async ({ page }) => {
     await expect(page.getByText("Collège Pasteur")).toBeVisible();
     await expect(page.getByText("Collectivité — sans facture")).toBeVisible();
   });
+
+  await test.step("Je crée une sollicitation entreprise avec son étape de devis", async () => {
+    await page.getByRole("button", { name: "Nouvelle sollicitation" }).click();
+    await page.getByLabel("Entreprise").check();
+    await page.getByPlaceholder("Organisme").fill("Entreprise Kelo");
+    await page.getByPlaceholder(/Module/).fill("Formation");
+    await page.locator('input[type="date"]').fill("2027-02-01");
+    await page.locator("select").selectOption("signe");
+    await page.getByRole("button", { name: "Créer" }).click();
+    await expect(page.getByText(/Entreprise Kelo/)).toBeVisible();
+    await expect(page.getByText(/Devis signé/)).toBeVisible();
+  });
 });

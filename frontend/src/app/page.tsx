@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import styles from "./page.module.css";
-import { personas, type Circuit, type Persona, type Sollicitation } from "./data";
+import { LIBELLES_DEVIS, personas, type Circuit, type EtapeDevis, type Persona, type Sollicitation } from "./data";
 import { filtrerSollicitations, type Filtre } from "./filtrer-sollicitations";
 
 async function obtenirSollicitations(): Promise<Sollicitation[]> {
@@ -18,6 +18,7 @@ export default function Home() {
   const [typeModule, setTypeModule] = useState("");
   const [date, setDate] = useState("");
   const [circuit, setCircuit] = useState<Circuit>("entreprise");
+  const [devis, setDevis] = useState<EtapeDevis>("a_envoyer");
   const [erreur, setErreur] = useState<string | null>(null);
   const [filtre, setFiltre] = useState<Filtre>("tout");
 
@@ -37,7 +38,13 @@ export default function Home() {
     const reponse = await fetch("/api/v1/sollicitations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ organisme, module: typeModule, date, circuit }),
+      body: JSON.stringify({
+        organisme,
+        module: typeModule,
+        date,
+        circuit,
+        ...(circuit === "entreprise" ? { devis } : {}),
+      }),
     });
     const corps = await reponse.json();
     if (!reponse.ok) {
@@ -48,6 +55,7 @@ export default function Home() {
     setTypeModule("");
     setDate("");
     setCircuit("entreprise");
+    setDevis("a_envoyer");
     setFormulaireOuvert(false);
     setSollicitations(await obtenirSollicitations());
   }
@@ -116,6 +124,13 @@ export default function Home() {
             onChange={(e) => setTypeModule(e.target.value)}
           />
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          {circuit === "entreprise" && (
+            <select value={devis} onChange={(e) => setDevis(e.target.value as EtapeDevis)}>
+              <option value="a_envoyer">Devis à envoyer</option>
+              <option value="envoye">Devis envoyé</option>
+              <option value="signe">Devis signé</option>
+            </select>
+          )}
           {erreur && <p className={styles.erreur}>{erreur}</p>}
           <button type="submit">Créer</button>
         </form>
@@ -136,7 +151,9 @@ export default function Home() {
           <li key={s.id} className={styles.fiche}>
             <strong>{s.organisme}</strong> — {s.module} ({s.date}) — <em>{s.etape}</em>
             <div className={styles.circuitBadge}>
-              {s.circuit === "collectivite" ? "Collectivité — sans facture" : "Entreprise — payante"}
+              {s.circuit === "collectivite"
+                ? "Collectivité — sans facture"
+                : `Entreprise — payante — ${s.devis ? LIBELLES_DEVIS[s.devis] : ""}`}
             </div>
           </li>
         ))}

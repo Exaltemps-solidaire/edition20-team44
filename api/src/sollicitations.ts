@@ -1,4 +1,5 @@
 export type Circuit = "entreprise" | "collectivite";
+export type EtapeDevis = "a_envoyer" | "envoye" | "signe";
 
 export type Sollicitation = {
   id: string;
@@ -7,6 +8,7 @@ export type Sollicitation = {
   date: string;
   etape: string;
   circuit: Circuit;
+  devis?: EtapeDevis;
 };
 
 export type NouvelleSollicitation = {
@@ -14,15 +16,17 @@ export type NouvelleSollicitation = {
   module?: unknown;
   date?: unknown;
   circuit?: unknown;
+  devis?: unknown;
 };
 
 const CIRCUITS: Circuit[] = ["entreprise", "collectivite"];
+const ETAPES_DEVIS: EtapeDevis[] = ["a_envoyer", "envoye", "signe"];
 
 let compteur = 0;
 const sollicitations: Sollicitation[] = [
   { id: "s1", organisme: "Mairie de Paris", module: "Formation", date: "2026-12-01", etape: "Session planifiée", circuit: "collectivite" },
-  { id: "s2", organisme: "Entreprise Lumio", module: "Sensibilisation — Fresque de la rue", date: "2026-12-05", etape: "Devis envoyé", circuit: "entreprise" },
-  { id: "s3", organisme: "Lycée Voltaire", module: "Formation", date: "2026-12-10", etape: "Demande reçue", circuit: "entreprise" },
+  { id: "s2", organisme: "Entreprise Lumio", module: "Sensibilisation — Fresque de la rue", date: "2026-12-05", etape: "Devis envoyé", circuit: "entreprise", devis: "envoye" },
+  { id: "s3", organisme: "Lycée Voltaire", module: "Formation", date: "2026-12-10", etape: "Demande reçue", circuit: "entreprise", devis: "a_envoyer" },
 ];
 
 export function listerSollicitations(): Sollicitation[] {
@@ -41,6 +45,10 @@ export function creerSollicitation(
   if (typeof entree.circuit !== "string" || !CIRCUITS.includes(entree.circuit as Circuit)) {
     return { ok: false, erreur: `circuit invalide : attendu ${CIRCUITS.join(" ou ")}` };
   }
+  const circuit = entree.circuit as Circuit;
+  if (circuit === "entreprise" && (typeof entree.devis !== "string" || !ETAPES_DEVIS.includes(entree.devis as EtapeDevis))) {
+    return { ok: false, erreur: `devis invalide : attendu ${ETAPES_DEVIS.join(" ou ")}` };
+  }
   compteur += 1;
   const sollicitation: Sollicitation = {
     id: `s${sollicitations.length + compteur}`,
@@ -48,7 +56,8 @@ export function creerSollicitation(
     module: (entree.module as string).trim(),
     date: (entree.date as string).trim(),
     etape: "Demande reçue",
-    circuit: entree.circuit as Circuit,
+    circuit,
+    ...(circuit === "entreprise" ? { devis: entree.devis as EtapeDevis } : {}),
   };
   sollicitations.push(sollicitation);
   return { ok: true, sollicitation };

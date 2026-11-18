@@ -1,5 +1,6 @@
 export type Persona = { id: string; nom: string; role: string };
 export type Circuit = "entreprise" | "collectivite";
+export type EtapeDevis = "a_envoyer" | "envoye" | "signe";
 export type Sollicitation = {
   id: string;
   organisme: string;
@@ -7,6 +8,13 @@ export type Sollicitation = {
   date: string;
   etape: string;
   circuit: Circuit;
+  devis?: EtapeDevis;
+};
+
+export const LIBELLES_DEVIS: Record<EtapeDevis, string> = {
+  a_envoyer: "Devis à envoyer",
+  envoye: "Devis envoyé",
+  signe: "Devis signé",
 };
 
 export const personas: Persona[] = [

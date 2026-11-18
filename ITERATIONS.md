@@ -170,9 +170,35 @@
 - **Tests unitaires prévus** : 1 à 2, sur la validation conditionnelle (devis obligatoire si entreprise, absent/ignoré si collectivité).
 - **Étapes ajoutées à la démo** : choisir l'étape de devis pour une fiche Entreprise, vérifier son affichage.
 - **⚠️ À confirmer au lancement** : redemander le temps restant et valider que ce découpage (pas de distinction de champs par circuit à l'itération 4, rattrapée ici pour le devis seulement) convient toujours aux cadreurs.
+- **Temps restant au début** : ~20 minutes (redemandé, 2026-11-18). Plan confirmé tel quel par le développeur.
+- **Bilan** :
+  - Codage réel : 1 minute (pas d'alarme). Déploiement des deux services (~1 minute, images majoritairement en cache). Temps total de l'itération : environ 3 minutes.
+  - Les 3 critères sont satisfaits, vérifiés par `curl` : devis obligatoire et validé pour le circuit entreprise (400 si absent/invalide, 201 sinon), absent/ignoré pour le circuit collectivité, visible dans `GET /api/v1/sollicitations`.
+  - Rien n'est reporté.
+  - Contrat de déployabilité : aucune borne, aucune alarme.
+  - Démo (`e2e/demo.spec.ts`, hors DoD) : étape « sollicitation entreprise + devis » ajoutée, non rejouée en local (même limitation que les itérations précédentes).
+  - **Modifications** :
+    - `api/src/sollicitations.ts` : type `EtapeDevis`, champ `devis` optionnel, requis et validé seulement pour le circuit entreprise, ignoré pour collectivité — sert les 3 critères.
+    - `api/src/routes.test.ts` : test sur le devis manquant/invalide pour entreprise, accepté pour les 3 valeurs, ignoré pour collectivité — DoD point 2.
+    - `frontend/src/app/data.ts` : type `EtapeDevis` et libellés associés, champ `devis` sur `Sollicitation`.
+    - `frontend/src/app/page.tsx` : sélecteur d'étape de devis affiché seulement si circuit entreprise, affichage sur la fiche — sert les 3 critères.
+    - `frontend/src/app/page.module.css` : style du `<select>` aligné sur les `<input>` du formulaire.
+    - `e2e/demo.spec.ts` : étape de création entreprise + devis ajoutée (hors DoD).
+
+## Itération 7 : Cadrer le choix du module (formation ou sensibilisation)
+
+- **Constat** : le champ « module » est déjà un texte libre depuis l'itération 2 — une sensibilisation (« Cluedo », « Fresque de la rue ») s'affiche déjà dans le tableau de bord comme une formation, le critère du PRD est donc déjà rempli dans les faits. Ce qui manque : un choix guidé plutôt qu'un texte libre, pour éviter les doublons de saisie (« Cluedo » vs « cluedo » vs « Jeu du cluedo »).
+- **Dans le périmètre** : remplacer le champ libre « Module » par un menu déroulant avec les valeurs connues (Formation, Cluedo, Fresque de la rue, Stand).
+- **Hors périmètre** : ajouter un nouveau type de sensibilisation non listé par la passation, distinguer sensibilisation/formation dans le stockage ou le filtre.
+- **Critères d'acceptation** :
+  - Étant donné le formulaire de création, alors le champ module est un menu déroulant avec les 4 valeurs ci-dessus (pas de texte libre).
+- **Hypothèse de l'équipe couverte** : aucune (hypothèses non rédigées, voir ⚠️ en tête de fichier).
+- **Codage estimé** : 3 minutes.
+- **Fichiers prévus** : `frontend/src/app/page.tsx` (remplacement de l'`<input>` par un `<select>`). Soit 1 fichier.
+- **Tests unitaires prévus** : aucun (balisage pur, pas de nouvelle logique).
+- **Étapes ajoutées à la démo** : aucune (le module est déjà couvert par les étapes existantes).
 - **Bilan** : _à remplir en fin d'itération_
 
 ## À venir
 
-1. Sensibilisations dans le même outil : le module accepte cluedo / Fresque de la rue / stand et apparaît dans le tableau de bord comme une formation.
-2. Migrer le stockage des sollicitations de la mémoire vers Postgres (base `team44`, déjà créée sur la plateforme) — shortcut noté dans `adr.md`.
+1. Migrer le stockage des sollicitations de la mémoire vers Postgres (base `team44`, déjà créée sur la plateforme) — shortcut noté dans `adr.md`. Plus gros que les itérations précédentes (nouvelle dépendance, connexion, migration du schéma) : à tailler avec les cadreurs si le temps le permet encore.
