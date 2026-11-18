@@ -185,7 +185,36 @@
     - `frontend/src/app/page.module.css` : style du `<select>` aligné sur les `<input>` du formulaire.
     - `e2e/demo.spec.ts` : étape de création entreprise + devis ajoutée (hors DoD).
 
-## Itération 7 : Cadrer le choix du module (formation ou sensibilisation)
+## Itération 7 : Modifier ou supprimer une sollicitation existante
+
+- **⚠️ Demande directe du développeur**, insérée devant « cadrer le module » (repoussé en itération 8). Changement de priorité non validé par les cadreurs.
+- **Dans le périmètre** : sur chaque fiche du tableau de bord, un bouton « Modifier » (formulaire pré-rempli, mêmes champs et validations qu'à la création) et un bouton « Supprimer » (avec confirmation).
+- **Hors périmètre** : historique des modifications, suppression en masse, undo après suppression.
+- **Critères d'acceptation** :
+  - Étant donné une fiche existante, quand on la modifie et qu'on valide, alors ses nouvelles valeurs s'affichent sans qu'une fiche supplémentaire apparaisse.
+  - Étant donné une fiche existante, quand on la supprime (après confirmation), alors elle disparaît du tableau de bord pour tout persona.
+- **Hypothèse de l'équipe couverte** : aucune (demande du développeur).
+- **Codage estimé** : 8 minutes.
+- **Fichiers prévus** : `api/src/sollicitations.ts` (fonctions modifier/supprimer), `api/src/routes.ts` (routes `PUT`/`DELETE /api/v1/sollicitations/:id`), `api/src/server.ts` (méthode `DELETE` dans la lecture de corps si besoin), `frontend/src/app/page.tsx` (boutons + formulaire d'édition réutilisé), `api/src/routes.test.ts`. Soit 5 fichiers.
+- **Tests unitaires prévus** : 2 à 3, sur la modification (champs valides/invalides) et la suppression (fiche retirée, id inconnu).
+- **Étapes ajoutées à la démo** : aucune dans ce budget serré (hors DoD, non bloquant).
+- **⚠️ Marge serrée** : ~18 minutes annoncées pour codage (8, large pour une vraie fonctionnalité CRUD) + publication (~2, images en cache) + tour de test (10) ≈ 20 minutes. Redemander le temps si l'alarme des 8 minutes sonne.
+- **Bilan** :
+  - Codage réel : 1 minute (pas d'alarme). Déploiement des deux services (~1 minute). Temps total de l'itération : 2 minutes — bien en dessous de l'estimation, la marge serrée annoncée ne s'est pas matérialisée.
+  - Les 2 critères sont satisfaits, vérifiés par `curl` de bout en bout : `PUT` met à jour la fiche en place (même nombre de fiches avant/après), `DELETE` la retire (`204`, absente ensuite de `GET`).
+  - **Simplification assumée** : `modifierSollicitation` réutilise la même validation que la création — un champ devis fourni pour une fiche repassée en circuit « collectivité » est silencieusement ignoré (pas d'erreur), cohérent avec le comportement déjà choisi à la création.
+  - Rien n'est reporté.
+  - Contrat de déployabilité : aucune borne, aucune alarme.
+  - Démo (hors DoD) : non mise à jour (modification/suppression hors du cas passant principal), comme annoncé dans le plan.
+  - **Modifications** :
+    - `api/src/sollicitations.ts` : extraction de `validerChamps` (partagée création/modification), ajout de `modifierSollicitation` et `supprimerSollicitation` — sert les 2 critères.
+    - `api/src/routes.ts` : routes `PUT`/`DELETE /api/v1/sollicitations/:id` — sert les 2 critères.
+    - `api/src/routes.test.ts` : tests sur la modification (en place, fiche introuvable, champs invalides) et la suppression (retirée, introuvable) — DoD point 2.
+    - `frontend/src/app/page.tsx` : formulaire unique réutilisé en création/édition (`idEnEdition`), boutons « Modifier » et « Supprimer » par fiche (confirmation native avant suppression) — sert les 2 critères.
+    - `frontend/src/app/page.module.css` : style des boutons d'action sur chaque fiche.
+    - `api/src/server.ts` : non touché, la lecture de corps existante couvrait déjà `PUT` ; `DELETE` n'a pas de corps.
+
+## Itération 8 : Cadrer le choix du module (formation ou sensibilisation)
 
 - **Constat** : le champ « module » est déjà un texte libre depuis l'itération 2 — une sensibilisation (« Cluedo », « Fresque de la rue ») s'affiche déjà dans le tableau de bord comme une formation, le critère du PRD est donc déjà rempli dans les faits. Ce qui manque : un choix guidé plutôt qu'un texte libre, pour éviter les doublons de saisie (« Cluedo » vs « cluedo » vs « Jeu du cluedo »).
 - **Dans le périmètre** : remplacer le champ libre « Module » par un menu déroulant avec les valeurs connues (Formation, Cluedo, Fresque de la rue, Stand).

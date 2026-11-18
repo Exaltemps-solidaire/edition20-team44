@@ -123,6 +123,26 @@
   color: var(--accent);
 }
 
+.ficheActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ficheActions button {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #e4e9f2;
+  background: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ficheActions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .filtres {
   display: flex;
   gap: 8px;

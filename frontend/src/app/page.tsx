@@ -21,6 +21,7 @@ export default function Home() {
   const [devis, setDevis] = useState<EtapeDevis>("a_envoyer");
   const [erreur, setErreur] = useState<string | null>(null);
   const [filtre, setFiltre] = useState<Filtre>("tout");
+  const [idEnEdition, setIdEnEdition] = useState<string | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -32,11 +33,32 @@ export default function Home() {
     };
   }, []);
 
-  async function creerSollicitation(evenement: FormEvent) {
+  function fermerFormulaire() {
+    setOrganisme("");
+    setTypeModule("");
+    setDate("");
+    setCircuit("entreprise");
+    setDevis("a_envoyer");
+    setIdEnEdition(null);
+    setFormulaireOuvert(false);
+  }
+
+  function ouvrirEdition(s: Sollicitation) {
+    setOrganisme(s.organisme);
+    setTypeModule(s.module);
+    setDate(s.date);
+    setCircuit(s.circuit);
+    setDevis(s.devis ?? "a_envoyer");
+    setIdEnEdition(s.id);
+    setFormulaireOuvert(true);
+  }
+
+  async function soumettreFormulaire(evenement: FormEvent) {
     evenement.preventDefault();
     setErreur(null);
-    const reponse = await fetch("/api/v1/sollicitations", {
-      method: "POST",
+    const url = idEnEdition ? `/api/v1/sollicitations/${idEnEdition}` : "/api/v1/sollicitations";
+    const reponse = await fetch(url, {
+      method: idEnEdition ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         organisme,
@@ -46,17 +68,18 @@ export default function Home() {
         ...(circuit === "entreprise" ? { devis } : {}),
       }),
     });
-    const corps = await reponse.json();
     if (!reponse.ok) {
-      setErreur(corps.erreur ?? "La création a échoué.");
+      const corps = await reponse.json();
+      setErreur(corps.erreur ?? "L'enregistrement a échoué.");
       return;
     }
-    setOrganisme("");
-    setTypeModule("");
-    setDate("");
-    setCircuit("entreprise");
-    setDevis("a_envoyer");
-    setFormulaireOuvert(false);
+    fermerFormulaire();
+    setSollicitations(await obtenirSollicitations());
+  }
+
+  async function supprimerSollicitation(id: string) {
+    if (!window.confirm("Supprimer cette sollicitation ?")) return;
+    await fetch(`/api/v1/sollicitations/${id}`, { method: "DELETE" });
     setSollicitations(await obtenirSollicitations());
   }
 
@@ -88,11 +111,14 @@ export default function Home() {
         </button>
       </header>
       <h1>Sollicitations</h1>
-      <button className={styles.changerPersona} onClick={() => setFormulaireOuvert((v) => !v)}>
-        Nouvelle sollicitation
+      <button
+        className={styles.changerPersona}
+        onClick={() => (formulaireOuvert ? fermerFormulaire() : setFormulaireOuvert(true))}
+      >
+        {formulaireOuvert ? "Annuler" : "Nouvelle sollicitation"}
       </button>
       {formulaireOuvert && (
-        <form className={styles.formulaire} onSubmit={creerSollicitation}>
+        <form className={styles.formulaire} onSubmit={soumettreFormulaire}>
           <div className={styles.circuits}>
             <label>
               <input
@@ -132,7 +158,7 @@ export default function Home() {
             </select>
           )}
           {erreur && <p className={styles.erreur}>{erreur}</p>}
-          <button type="submit">Créer</button>
+          <button type="submit">{idEnEdition ? "Enregistrer" : "Créer"}</button>
         </form>
       )}
       <div className={styles.filtres}>
@@ -154,6 +180,10 @@ export default function Home() {
               {s.circuit === "collectivite"
                 ? "Collectivité — sans facture"
                 : `Entreprise — payante — ${s.devis ? LIBELLES_DEVIS[s.devis] : ""}`}
+            </div>
+            <div className={styles.ficheActions}>
+              <button onClick={() => ouvrirEdition(s)}>Modifier</button>
+              <button onClick={() => supprimerSollicitation(s.id)}>Supprimer</button>
             </div>
           </li>
         ))}

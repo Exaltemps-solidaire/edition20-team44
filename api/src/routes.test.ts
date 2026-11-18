@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { router } from "./routes.ts";
-import { creerSollicitation, listerSollicitations } from "./sollicitations.ts";
+import { creerSollicitation, listerSollicitations, modifierSollicitation, supprimerSollicitation } from "./sollicitations.ts";
 
 describe("router", () => {
   it("répond 200 sur les deux routes de santé", () => {
@@ -47,5 +47,38 @@ describe("creerSollicitation", () => {
     expect(resultat.ok && resultat.sollicitation.devis).toBe("signe");
     const collectivite = creerSollicitation({ organisme: "Y", module: "Formation", date: "2027-01-01", circuit: "collectivite", devis: "signe" });
     expect(collectivite.ok && collectivite.sollicitation.devis).toBeUndefined();
+  });
+});
+
+describe("modifierSollicitation", () => {
+  it("met à jour une fiche existante sans en créer une nouvelle", () => {
+    const cree = creerSollicitation({ organisme: "Avant", module: "Formation", date: "2027-01-01", circuit: "collectivite" });
+    const avant = listerSollicitations().length;
+    const id = cree.ok ? cree.sollicitation.id : "";
+    const resultat = modifierSollicitation(id, { organisme: "Après", module: "Formation", date: "2027-01-01", circuit: "collectivite" });
+    expect(resultat.ok).toBe(true);
+    expect(resultat.ok && resultat.sollicitation.organisme).toBe("Après");
+    expect(listerSollicitations().length).toBe(avant);
+  });
+
+  it("refuse une fiche introuvable ou des champs invalides", () => {
+    expect(modifierSollicitation("inconnu", { organisme: "X", module: "Y", date: "2027-01-01", circuit: "collectivite" }).ok).toBe(false);
+    const cree = creerSollicitation({ organisme: "X", module: "Y", date: "2027-01-01", circuit: "collectivite" });
+    const id = cree.ok ? cree.sollicitation.id : "";
+    expect(modifierSollicitation(id, { organisme: "", module: "Y", date: "2027-01-01", circuit: "collectivite" }).ok).toBe(false);
+  });
+});
+
+describe("supprimerSollicitation", () => {
+  it("retire une fiche existante de la liste", () => {
+    const cree = creerSollicitation({ organisme: "À supprimer", module: "Formation", date: "2027-01-01", circuit: "collectivite" });
+    const id = cree.ok ? cree.sollicitation.id : "";
+    const avant = listerSollicitations().length;
+    expect(supprimerSollicitation(id).ok).toBe(true);
+    expect(listerSollicitations().length).toBe(avant - 1);
+  });
+
+  it("refuse une fiche introuvable", () => {
+    expect(supprimerSollicitation("inconnu").ok).toBe(false);
   });
 });

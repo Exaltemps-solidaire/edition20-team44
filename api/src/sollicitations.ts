@@ -33,9 +33,15 @@ export function listerSollicitations(): Sollicitation[] {
   return sollicitations;
 }
 
-export function creerSollicitation(
-  entree: NouvelleSollicitation,
-): { ok: true; sollicitation: Sollicitation } | { ok: false; erreur: string } {
+type ChampsValides = {
+  organisme: string;
+  module: string;
+  date: string;
+  circuit: Circuit;
+  devis?: EtapeDevis;
+};
+
+function validerChamps(entree: NouvelleSollicitation): { ok: true; valeurs: ChampsValides } | { ok: false; erreur: string } {
   const champsVides = ["organisme", "module", "date"].filter(
     (champ) => typeof entree[champ as keyof NouvelleSollicitation] !== "string" || !(entree[champ as keyof NouvelleSollicitation] as string).trim(),
   );
@@ -49,16 +55,57 @@ export function creerSollicitation(
   if (circuit === "entreprise" && (typeof entree.devis !== "string" || !ETAPES_DEVIS.includes(entree.devis as EtapeDevis))) {
     return { ok: false, erreur: `devis invalide : attendu ${ETAPES_DEVIS.join(" ou ")}` };
   }
+  return {
+    ok: true,
+    valeurs: {
+      organisme: (entree.organisme as string).trim(),
+      module: (entree.module as string).trim(),
+      date: (entree.date as string).trim(),
+      circuit,
+      ...(circuit === "entreprise" ? { devis: entree.devis as EtapeDevis } : {}),
+    },
+  };
+}
+
+export function creerSollicitation(
+  entree: NouvelleSollicitation,
+): { ok: true; sollicitation: Sollicitation } | { ok: false; erreur: string } {
+  const resultat = validerChamps(entree);
+  if (!resultat.ok) return resultat;
   compteur += 1;
   const sollicitation: Sollicitation = {
     id: `s${sollicitations.length + compteur}`,
-    organisme: (entree.organisme as string).trim(),
-    module: (entree.module as string).trim(),
-    date: (entree.date as string).trim(),
     etape: "Demande reçue",
-    circuit,
-    ...(circuit === "entreprise" ? { devis: entree.devis as EtapeDevis } : {}),
+    ...resultat.valeurs,
   };
   sollicitations.push(sollicitation);
   return { ok: true, sollicitation };
+}
+
+export function modifierSollicitation(
+  id: string,
+  entree: NouvelleSollicitation,
+): { ok: true; sollicitation: Sollicitation } | { ok: false; erreur: string } {
+  const index = sollicitations.findIndex((s) => s.id === id);
+  if (index === -1) {
+    return { ok: false, erreur: "sollicitation introuvable" };
+  }
+  const resultat = validerChamps(entree);
+  if (!resultat.ok) return resultat;
+  const sollicitation: Sollicitation = {
+    ...sollicitations[index],
+    ...resultat.valeurs,
+    devis: resultat.valeurs.circuit === "entreprise" ? resultat.valeurs.devis : undefined,
+  };
+  sollicitations[index] = sollicitation;
+  return { ok: true, sollicitation };
+}
+
+export function supprimerSollicitation(id: string): { ok: true } | { ok: false; erreur: string } {
+  const index = sollicitations.findIndex((s) => s.id === id);
+  if (index === -1) {
+    return { ok: false, erreur: "sollicitation introuvable" };
+  }
+  sollicitations.splice(index, 1);
+  return { ok: true };
 }
